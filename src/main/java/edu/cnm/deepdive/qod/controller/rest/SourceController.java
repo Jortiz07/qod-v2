@@ -3,7 +3,11 @@ package edu.cnm.deepdive.qod.controller.rest;
 import edu.cnm.deepdive.qod.controller.exception.SearchTermTooShortException;
 import edu.cnm.deepdive.qod.model.entity.Quote;
 import edu.cnm.deepdive.qod.model.entity.Source;
+import edu.cnm.deepdive.qod.service.QuoteRepository;
 import edu.cnm.deepdive.qod.service.SourceRepository;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +32,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class SourceController {
 
   private final SourceRepository repository;
+  private final QuoteRepository quoteRepository;
 
   @Autowired
-  public SourceController(SourceRepository repository) {
+  public SourceController(SourceRepository repository, QuoteRepository quoteRepository) {
     this.repository = repository;
+    this.quoteRepository = quoteRepository;
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -42,8 +48,21 @@ public class SourceController {
   }
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  public Iterable<Source> get() {
-    return repository.findAllByOrderByName();
+  public Iterable<Source> get(@RequestParam(required = false, defaultValue = "false") boolean includeNull) {
+    if (includeNull) {
+      List<Source> sources = new LinkedList<>();
+      for (Source source : repository.findAllByOrderByName()) {
+        sources.add(source);
+      }
+      Source nullSource = new Source();
+      for (Quote quote : quoteRepository.getAllBySourceOrderByTextAsc(null)) {
+        nullSource.getQuotes().add(quote);
+      }
+      sources.add(nullSource);
+      return sources;
+    } else {
+      return repository.findAllByOrderByName();
+    }
   }
 
   @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)

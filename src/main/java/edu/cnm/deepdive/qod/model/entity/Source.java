@@ -41,7 +41,6 @@ public class Source implements FlatSource {
 
   private static EntityLinks entityLinks;
 
-  @NonNull
   @Id
   @GeneratedValue(generator = "uuid2")
   @GenericGenerator(name = "uuid2", strategy = "uuid2")
@@ -49,19 +48,16 @@ public class Source implements FlatSource {
       nullable = false, updatable = false)
   private UUID id;
 
-  @NonNull
   @CreationTimestamp
   @Temporal(TemporalType.TIMESTAMP)
   @Column(nullable = false, updatable = false)
   private Date created;
 
-  @NonNull
   @UpdateTimestamp
   @Temporal(TemporalType.TIMESTAMP)
   @Column(nullable = false)
   private Date updated;
 
-  @NonNull
   @Column(length = 1024, nullable = false, unique = true)
   private String name;
 
@@ -102,7 +98,7 @@ public class Source implements FlatSource {
 
   @Override
   public URI getHref() {
-    return entityLinks.linkForItemResource(Source.class, id).toUri();
+    return (id != null) ? entityLinks.linkForItemResource(Source.class, id).toUri() : null;
   }
 
   @Override
@@ -127,6 +123,7 @@ public class Source implements FlatSource {
     entityLinks.toString();
   }
 
+  @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
   private void setEntityLinks(EntityLinks entityLinks) {
     Source.entityLinks = entityLinks;
